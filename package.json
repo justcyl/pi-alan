@@ -1,0 +1,21 @@
+{
+  "name": "pi-alan",
+  "version": "0.1.0",
+  "description": "Research pipeline management for pi — YAML-based atomic execution units with structured logs and widget",
+  "type": "module",
+  "main": "src/index.ts",
+  "pi": {
+    "skills": ["skills"]
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "yaml": "^2.7.1"
+  },
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@sinclair/typebox": "*",
+    "typescript": "^5.5.0"
+  }
+}
