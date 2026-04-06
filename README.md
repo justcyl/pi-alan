@@ -23,7 +23,7 @@ pi install /path/to/pi-run
 
 ## Activation
 
-The extension **only activates when `.pipeline/` exists** in the current working directory. No `.pipeline/` directory = no tools registered = zero overhead.
+The extension registers 5 tools for managing runs. The `.pipeline/` directory is created automatically when the first run is created.
 
 ## Tools
 

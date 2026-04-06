@@ -35,11 +35,6 @@ function validateSlug(slug: string): string | null {
 
 export class RunStore {
 
-  /** Check if .pipeline/ directory exists in cwd. */
-  static hasPipeline(): boolean {
-    return existsSync(".pipeline");
-  }
-
   /** Create a new run. Returns error string or null on success. */
   create(slug: string, fields: {
     goal: string;

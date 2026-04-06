@@ -9,7 +9,6 @@
  *   RunShow    — Bind a run to this session (shows widget)
  *
  * Design:
- *   - Only activates when .pipeline/ directory exists in cwd
  *   - YAML files in .pipeline/runs/, one per run
  *   - Immutable core fields (goal, description, checker, context, links)
  *   - Mutable: status, log (append-only), blocked_by (append-only)
@@ -28,9 +27,6 @@ function textResult(msg: string) {
 }
 
 export default function (pi: ExtensionAPI) {
-  // ── Gate: only activate when .pipeline/ exists ──
-  if (!RunStore.hasPipeline()) return;
-
   const store = new RunStore();
   const widget = new RunWidget(store);
 
