@@ -6,13 +6,12 @@ Research pipeline run management extension for [pi](https://github.com/badlogic/
 
 A **run** is an atomic execution unit in a research pipeline — running an experiment, writing a section, verifying a hypothesis. Each run is a YAML file in `.pipeline/runs/<slug>.yaml` with:
 
-- **goal** — what to achieve (immutable)
-- **checker** — completion criteria (immutable)
-- **description** — how to do it (immutable)
-- **context** — background knowledge (immutable)
-- **links** — related cards/runs (immutable)
+- **description** — why this run exists + high-level approach (immutable)
+- **checker** — done-when criteria: what outputs must exist, NOT whether results are good (immutable)
+- **context** — background knowledge, card references (mutable — grows during execution)
 - **blocked_by** — prerequisite runs (mutable, weak constraint)
-- **status** — `active` / `done` / `archived` (mutable)
+- **result_of** — output paths: cards, drafts, plots produced (mutable)
+- **status** — `active` / `done` / `cancelled` / `superseded` (mutable)
 - **log** — structured append-only execution journal (mutable)
 
 ## Install
@@ -32,7 +31,7 @@ The extension registers 5 tools for managing runs. The `.pipeline/` directory is
 | `RunCreate` | Create a new run with goal, checker, and optional fields |
 | `RunList` | List runs, optionally filtered by status |
 | `RunGet` | Get full details of a run by slug |
-| `RunUpdate` | Append log entries, change status, add blockers |
+| `RunUpdate` | Append log entries, change status/context, add blockers/outputs |
 | `RunShow` | Bind a run to this session → show widget |
 
 ## Widget
@@ -50,12 +49,15 @@ Call `RunShow` with no slug to unbind and hide the widget.
 
 ## Immutability Model
 
-Core fields are write-once. `RunUpdate` only exposes:
-- `status` — state transitions
-- `log_entry` — append structured journal entries (`progress` / `observation` / `issue` / `decision` / `output`)
-- `add_blocked_by` — add new prerequisites
+Only two fields are immutable after creation: `description` and `checker`. Everything else can evolve:
 
-To change a run's goal, archive it and create a new one.
+- `context` — replace via RunUpdate as new card dependencies emerge
+- `blocked_by` — append new prerequisites
+- `result_of` — append outputs (cards, drafts, plots)
+- `status` — active → done / cancelled / superseded
+- `log` — append structured journal entries (`progress` / `observation` / `issue` / `decision` / `output`)
+
+To change a run's intent, mark it cancelled/superseded and create a new one.
 
 ## Example
 
@@ -67,12 +69,10 @@ goal: |
 checker: |
   - 完成 3 seeds 的实验运行
   - 产出 finding card 记录 BLEU mean±std
-  - BLEU 差距 ≤ 2 分视为通过
 status: active
-links:
-  - cards/debiased-k1-matches-k5
 blocked_by:
   - runs/setup-env
+result_of: []
 log:
   - at: 2026-03-30T14:30:00.000Z
     type: progress

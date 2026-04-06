@@ -23,7 +23,7 @@ links: []               # 指向其他 card 或 run 的路径
 | 字段 | 说明 |
 |------|------|
 | `type` | `hypothesis`：认为可能成立，待验证。`finding`：已观察/已学到。`decision`：约束性选择 |
-| `status` | `active`：在工作集中。`archived`：不再关注 |
+| `status` | `active`：在工作集中。`archived`：不再纳入项目上下文（被取代、被证伪、不再相关），归档原因写在 body 中 |
 | `links` | 指向相关 card 或 run 的路径列表，不区分关系类型 |
 
 时间信息由文件系统维护，不在 YAML 中重复。

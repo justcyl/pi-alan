@@ -4,7 +4,7 @@
  * Only visible when a run is bound to the session via RunShow.
  */
 
-import type { Run, LogEntry } from "./types.js";
+import type { Run } from "./types.js";
 import type { RunStore } from "./run-store.js";
 
 export type UICtx = {
@@ -20,7 +20,8 @@ const MAX_LOG_LINES = 3;
 const STATUS_ICONS: Record<string, string> = {
   active: "▶",
   done: "✔",
-  archived: "▪",
+  cancelled: "✖",
+  superseded: "↷",
 };
 
 export class RunWidget {
@@ -44,7 +45,7 @@ export class RunWidget {
   unbind() {
     this.boundSlug = undefined;
     if (this.uiCtx) {
-      this.uiCtx.setWidget("pi-run", undefined);
+      this.uiCtx.setWidget("pi-alan", undefined);
       this.registered = false;
     }
   }
@@ -67,7 +68,7 @@ export class RunWidget {
     const run = result.run;
 
     if (!this.registered) {
-      this.uiCtx.setWidget("pi-run", (tui: any, theme: any) => ({
+      this.uiCtx.setWidget("pi-alan", (tui: any, theme: any) => ({
         render: () => this.renderLines(slug, run, tui, theme),
         invalidate: () => {},
       }), { placement: "aboveEditor" });
@@ -83,7 +84,8 @@ export class RunWidget {
 
     const icon = STATUS_ICONS[run.status] ?? "?";
     const statusColor = run.status === "active" ? "accent" : run.status === "done" ? "success" : "dim";
-    const header = `${theme.fg(statusColor, icon)} ${theme.fg("accent", slug)} ${theme.fg("dim", `[${run.status}]`)} ${run.goal.split("\n")[0].trim()}`;
+    const desc = run.description.split("\n")[0].trim();
+    const header = `${theme.fg(statusColor, icon)} ${theme.fg("accent", slug)} ${theme.fg("dim", `[${run.status}]`)} ${desc}`;
 
     const lines = [header];
 
@@ -101,6 +103,11 @@ export class RunWidget {
     const blockers = this.store.checkBlockers(slug);
     if (blockers.unresolved.length > 0) {
       lines.push(`  ${theme.fg("warning", `⏳ blocked by: ${blockers.unresolved.join(", ")}`)}`);
+    }
+
+    // Show outputs if any
+    if (run.result_of && run.result_of.length > 0) {
+      lines.push(`  ${theme.fg("dim", `★ outputs: ${run.result_of.join(", ")}`)}`);
     }
 
     return lines;

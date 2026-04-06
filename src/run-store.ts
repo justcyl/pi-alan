@@ -2,7 +2,8 @@
  * run-store.ts — YAML file-backed run store.
  *
  * Each run is a separate file: .pipeline/runs/<slug>.yaml
- * Immutable fields enforced by only exposing status/log/blocked_by mutations.
+ * Immutable fields: created, description, checker
+ * Mutable fields: status, context, blocked_by, result_of, log
  */
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -37,11 +38,9 @@ export class RunStore {
 
   /** Create a new run. Returns error string or null on success. */
   create(slug: string, fields: {
-    goal: string;
-    description?: string;
+    description: string;
     checker: string;
     context?: string;
-    links?: string[];
     blocked_by?: string[];
   }): { error?: string } {
     const slugErr = validateSlug(slug);
@@ -55,12 +54,10 @@ export class RunStore {
 
     const run: Run = {
       created: new Date().toISOString(),
-      goal: fields.goal,
-      ...(fields.description ? { description: fields.description } : {}),
+      description: fields.description,
       checker: fields.checker,
       ...(fields.context ? { context: fields.context } : {}),
       status: "active",
-      ...(fields.links && fields.links.length > 0 ? { links: fields.links } : {}),
       ...(fields.blocked_by && fields.blocked_by.length > 0 ? { blocked_by: fields.blocked_by } : {}),
     };
 
@@ -68,11 +65,11 @@ export class RunStore {
     return {};
   }
 
-  /** List all runs. Returns slug + status + goal (first line). */
-  list(statusFilter?: RunStatus): { slug: string; status: RunStatus; goal: string; blocked_by?: string[] }[] {
+  /** List all runs. Returns slug + status + description (first line). */
+  list(statusFilter?: RunStatus): { slug: string; status: RunStatus; description: string; blocked_by?: string[] }[] {
     ensureDir();
     const files = readdirSync(RUNS_DIR).filter(f => f.endsWith(".yaml"));
-    const results: { slug: string; status: RunStatus; goal: string; blocked_by?: string[] }[] = [];
+    const results: { slug: string; status: RunStatus; description: string; blocked_by?: string[] }[] = [];
 
     for (const file of files) {
       try {
@@ -83,7 +80,7 @@ export class RunStore {
         results.push({
           slug,
           status: run.status,
-          goal: run.goal.split("\n")[0].trim(),
+          description: run.description.split("\n")[0].trim(),
           ...(run.blocked_by && run.blocked_by.length > 0 ? { blocked_by: run.blocked_by } : {}),
         });
       } catch {
@@ -113,11 +110,13 @@ export class RunStore {
     }
   }
 
-  /** Update mutable fields: status, log (append), blocked_by (append). */
+  /** Update mutable fields: status, context, log (append), blocked_by (append), result_of (append). */
   update(slug: string, fields: {
     status?: RunStatus;
+    context?: string;
     log_entry?: { type: LogType; detail: string };
     add_blocked_by?: string[];
+    add_result_of?: string[];
   }): { run?: Run; changes: string[]; warnings: string[]; error?: string } {
     const slugErr = validateSlug(slug);
     if (slugErr) return { error: slugErr, changes: [], warnings: [] };
@@ -143,6 +142,12 @@ export class RunStore {
       changes.push(`status → ${fields.status}`);
     }
 
+    // Context update (replace)
+    if (fields.context !== undefined) {
+      run.context = fields.context;
+      changes.push("context updated");
+    }
+
     // Append log entry
     if (fields.log_entry) {
       if (!run.log) run.log = [];
@@ -163,7 +168,6 @@ export class RunStore {
           warnings.push(`"${dep}" already in blocked_by`);
           continue;
         }
-        // Weak check: see if the target run file exists
         const depSlug = dep.replace(/^runs\//, "");
         const depPath = runPath(depSlug);
         if (!existsSync(depPath)) {
@@ -171,6 +175,19 @@ export class RunStore {
         }
         run.blocked_by.push(dep);
         changes.push(`blocked_by += ${dep}`);
+      }
+    }
+
+    // Append result_of
+    if (fields.add_result_of && fields.add_result_of.length > 0) {
+      if (!run.result_of) run.result_of = [];
+      for (const output of fields.add_result_of) {
+        if (run.result_of.includes(output)) {
+          warnings.push(`"${output}" already in result_of`);
+          continue;
+        }
+        run.result_of.push(output);
+        changes.push(`result_of += ${output}`);
       }
     }
 

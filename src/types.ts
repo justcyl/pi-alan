@@ -1,5 +1,5 @@
 /**
- * types.ts — Research pipeline run types, mirroring TASK.md schema (renamed to Run).
+ * types.ts — Research pipeline run types.
  */
 
 /** Log entry types */
@@ -13,17 +13,16 @@ export interface LogEntry {
 }
 
 /** Run status */
-export type RunStatus = "active" | "done" | "archived";
+export type RunStatus = "active" | "done" | "cancelled" | "superseded";
 
 /** Full run structure (stored as .pipeline/runs/<slug>.yaml) */
 export interface Run {
   created: string;
-  goal: string;
-  description?: string;
+  description: string;
   checker: string;
   context?: string;
   status: RunStatus;
-  links?: string[];
   blocked_by?: string[];
+  result_of?: string[];
   log?: LogEntry[];
 }
