@@ -347,12 +347,7 @@ Call with no slug (or slug "") to unbind and hide the widget.`,
       let sessionLabel = "unknown";
       try {
         const sf = (ctx as any)?.sessionManager?.getSessionFile?.();
-        const sn = pi.getSessionName?.() || "";
-        if (sf) {
-          // Extract filename without path (e.g. "abc123.json")
-          const fname = sf.split("/").pop() ?? sf;
-          sessionLabel = sn ? `${sn} (${fname})` : fname;
-        }
+        if (sf) sessionLabel = sf.split("/").pop() ?? sf;
       } catch { /* no session info available */ }
       store.update(params.slug, {
         log_entry: { type: "progress", detail: `session bound: ${sessionLabel}` },
