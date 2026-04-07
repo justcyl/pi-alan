@@ -349,7 +349,9 @@ Call with no slug (or slug "") to unbind and hide the widget.`,
         const sf = (ctx as any)?.sessionManager?.getSessionFile?.();
         const sn = pi.getSessionName?.() || "";
         if (sf) {
-          sessionLabel = sn ? `${sn} (${sf})` : sf;
+          // Extract filename without path (e.g. "abc123.json")
+          const fname = sf.split("/").pop() ?? sf;
+          sessionLabel = sn ? `${sn} (${fname})` : fname;
         }
       } catch { /* no session info available */ }
       store.update(params.slug, {
