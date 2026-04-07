@@ -32,6 +32,7 @@ write .pipeline/cards/<slug>.md
 ---
 type: hypothesis          # hypothesis | finding | decision
 status: active            # active | archived
+tags: [keyword1, keyword2] # 自由关键词，方便检索
 links:
   - cards/other-card
   - runs/some-run
@@ -69,6 +70,7 @@ links:
 ls .pipeline/cards/
 grep -l "type: finding" .pipeline/cards/*.md
 grep -rl "BLEU" .pipeline/cards/
+grep -l "debiasing" .pipeline/cards/*.md    # search by tag
 ```
 
 ## Run 操作

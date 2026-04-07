@@ -16,6 +16,7 @@ Card 是原子化的知识单元，每张只说一件事。
 ---
 type: hypothesis        # hypothesis | finding | decision
 status: active          # active | archived
+tags: []                # 自由关键词，方便检索
 links: []               # 指向其他 card 或 run 的路径
 ---
 ```
@@ -24,6 +25,7 @@ links: []               # 指向其他 card 或 run 的路径
 |------|------|
 | `type` | `hypothesis`：认为可能成立，待验证。`finding`：已观察/已学到。`decision`：约束性选择 |
 | `status` | `active`：在工作集中。`archived`：不再纳入项目上下文（被取代、被证伪、不再相关），归档原因写在 body 中 |
+| `tags` | 自由填写的关键词列表，用于分类和检索 |
 | `links` | 指向相关 card 或 run 的路径列表，不区分关系类型 |
 
 时间信息由文件系统维护，不在 YAML 中重复。
@@ -76,6 +78,7 @@ links: []               # 指向其他 card 或 run 的路径
 ---
 type: hypothesis
 status: active
+tags: [debiasing, attention-sorting, synthwiki]
 links:
   - cards/gap-no-single-pass-debiasing
   - cards/use-synthwiki-benchmark
@@ -105,6 +108,7 @@ position bias 主要集中在首尾 token 的 attention 分配上，
 ---
 type: finding
 status: active
+tags: [debiasing, bleu, synthwiki, llama3]
 links:
   - cards/debiased-k1-matches-k5
   - runs/verify-debiased-k1
@@ -135,6 +139,7 @@ debiased k=1 可替代 k=5，节省 80% 排序计算开销。
 ---
 type: decision
 status: active
+tags: [model-selection, llama3]
 links:
   - cards/baseline-bleu-33
   - cards/use-mistral-7b
