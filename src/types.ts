@@ -22,6 +22,7 @@ export interface Run {
   checker: string;
   context?: string;
   status: RunStatus;
+  tags?: string[];
   blocked_by?: string[];
   result_of?: string[];
   log?: LogEntry[];

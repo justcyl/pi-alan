@@ -41,6 +41,7 @@ export class RunStore {
     description: string;
     checker: string;
     context?: string;
+    tags?: string[];
     blocked_by?: string[];
   }): { error?: string } {
     const slugErr = validateSlug(slug);
@@ -58,6 +59,7 @@ export class RunStore {
       checker: fields.checker,
       ...(fields.context ? { context: fields.context } : {}),
       status: "active",
+      ...(fields.tags && fields.tags.length > 0 ? { tags: fields.tags } : {}),
       ...(fields.blocked_by && fields.blocked_by.length > 0 ? { blocked_by: fields.blocked_by } : {}),
     };
 
@@ -114,6 +116,7 @@ export class RunStore {
   update(slug: string, fields: {
     status?: RunStatus;
     context?: string;
+    tags?: string[];
     log_entry?: { type: LogType; detail: string };
     add_blocked_by?: string[];
     add_result_of?: string[];
@@ -146,6 +149,12 @@ export class RunStore {
     if (fields.context !== undefined) {
       run.context = fields.context;
       changes.push("context updated");
+    }
+
+    // Tags update (replace)
+    if (fields.tags !== undefined) {
+      run.tags = fields.tags;
+      changes.push(`tags → [${fields.tags.join(", ")}]`);
     }
 
     // Append log entry

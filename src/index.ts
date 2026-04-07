@@ -56,6 +56,7 @@ A run is an atomic execution unit — running an experiment, writing a section, 
 - **description**: Why this run exists and what approach to take — high-level intent, not a step-by-step script (immutable)
 - **checker**: Done-when criteria — how a third party can verify the run is complete by looking at outputs only. NOT a win-condition: a run that disproves a hypothesis is still done if it produced the expected deliverables (immutable)
 - **context**: Background knowledge, references to cards (optional, mutable via RunUpdate)
+- **tags**: Free-form keywords for search/filtering (optional, mutable via RunUpdate)
 - **blocked_by**: Prerequisite run paths (optional, mutable via RunUpdate)
 
 Immutable fields: description, checker. To change intent, mark this run cancelled/superseded and create a new one.`,
@@ -64,6 +65,7 @@ Immutable fields: description, checker. To change intent, mark this run cancelle
       description: Type.String({ description: "Why this run exists + high-level approach" }),
       checker: Type.String({ description: "Done-when criteria — what outputs must exist, NOT whether results are good" }),
       context: Type.Optional(Type.String({ description: "Background knowledge, references to cards" })),
+      tags: Type.Optional(Type.Array(Type.String(), { description: "Free-form keywords for search/filtering" })),
       blocked_by: Type.Optional(Type.Array(Type.String(), { description: "Prerequisite run paths (e.g. 'runs/setup-env')" })),
     }),
 
@@ -209,6 +211,7 @@ Returns all fields including description, checker, context, status, blocked_by, 
 
 - **status**: active → done / cancelled / superseded
 - **context**: Replace context (background knowledge, card references — grows during execution)
+- **tags**: Replace tags (free-form keywords for search/filtering)
 - **log**: Append a structured log entry (type + detail)
 - **blocked_by**: Add prerequisite run paths
 - **result_of**: Add output paths (cards, drafts, plots produced by this run)
@@ -246,6 +249,7 @@ When a run produces durable outputs (cards, drafts, plots), use add_result_of to
         Type.Literal("superseded"),
       ], { description: "New status" })),
       context: Type.Optional(Type.String({ description: "Replace context (background knowledge, card references)" })),
+      tags: Type.Optional(Type.Array(Type.String(), { description: "Replace tags (free-form keywords)" })),
       log_entry: Type.Optional(Type.Object({
         type: Type.Union([
           Type.Literal("progress"),
@@ -319,7 +323,7 @@ Call with no slug (or slug "") to unbind and hide the widget.`,
       slug: Type.Optional(Type.String({ description: "Run slug to bind, or empty to unbind" })),
     }),
 
-    execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+    execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       // Unbind
       if (!params.slug || params.slug === "") {
         const prev = widget.getBoundSlug();
@@ -338,6 +342,16 @@ Call with no slug (or slug "") to unbind and hide the widget.`,
 
       const run = result.run!;
       widget.bind(params.slug);
+
+      // Log session binding
+      let sessionLabel = "unknown";
+      try {
+        const sf = (ctx as any)?.sessionManager?.getSessionFile?.();
+        if (sf) sessionLabel = sf;
+      } catch { /* no session info available */ }
+      store.update(params.slug, {
+        log_entry: { type: "progress", detail: `session bound: ${sessionLabel}` },
+      });
 
       const blockers = store.checkBlockers(params.slug);
       let msg = `Bound to run "${params.slug}" [${run.status}]\n${run.description.split("\n")[0].trim()}`;
