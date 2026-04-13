@@ -61,8 +61,32 @@ links:
 
 ### Card 状态
 
-- `active` — 在工作集中
-- `archived` — 不再纳入项目上下文（被取代、被证伪、不再相关）。归档原因写在 body 中。
+- `active` — 在工作集中，位于 `.pipeline/cards/<slug>.md`
+- `archived` — 不再纳入项目上下文，位于 `.pipeline/cards/archived/<slug>.md`
+
+归档时**移动文件**到 archived 子目录，并在 body 末尾写明归档原因：
+
+```bash
+mkdir -p .pipeline/cards/archived
+mv .pipeline/cards/<slug>.md .pipeline/cards/archived/<slug>.md
+# 然后 edit frontmatter: status: archived
+# 并在 body 末尾补充归档原因
+```
+
+`ls .pipeline/cards/*.md` 只看到 active cards。
+
+### Card 维护
+
+**Active cards 必须保持不过时。** 每当创建或修改 card 时：
+
+1. 检查新 card 的 links 中引用的其他 active cards，判断是否因新信息而过时
+2. 如果旧 card 的核心主张被取代 → 归档旧 card
+3. 如果旧 card 只需补充信息（如加局限、加新证据）→ 原地修改
+
+典型场景：
+- 新 finding 证伪了某个 hypothesis → 归档 hypothesis，在归档原因中注明
+- 新 decision 取代了旧 decision → 归档旧 decision
+- 新 finding 补充了旧 finding → 在旧 finding 中补充，不新建
 
 ### 查找 card
 
@@ -167,5 +191,7 @@ decision card ←── "基于发现做出选择"
 - **一事一卡**：一张 card 只说一件事。
 - **不捏造**：数据、引用不编造。不确定就标 TBD。
 - **不重复**：card/run 之间用 links/blocked_by/result_of 引用，不复制内容。
-- **不删除**：不要的 card 标 archived，不要的 run 标 cancelled/superseded。
+- **不删除**：不要的 card 移到 archived/，不要的 run 标 cancelled/superseded。
 - **Log 不沉淀知识**：任务级 observation/decision 留在 log；项目级发现和决策升级为 card。
+- **Card 自动提交**：每次 card 修改后由扩展自动 git commit，保持工作区干净。
+- **Active 不过时**：每次新建/修改 card 时，检查关联的 active cards 是否因此过时，过时就归档。

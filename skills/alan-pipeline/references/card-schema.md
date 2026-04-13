@@ -5,10 +5,13 @@ Card 是原子化的知识单元，每张只说一件事。
 ## 文件位置
 
 ```
-.pipeline/cards/<slug>.md
+.pipeline/cards/<slug>.md              # active cards
+.pipeline/cards/archived/<slug>.md     # archived cards
 ```
 
 文件名为描述性短名，kebab-case。如 `debiased-k1-matches-k5.md`、`use-llama3-8b.md`。
+
+归档时将文件移到 `archived/` 子目录，确保 `ls .pipeline/cards/*.md` 只返回 active cards。
 
 ## YAML Front Matter
 

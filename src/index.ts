@@ -18,6 +18,7 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import { execSync } from "node:child_process";
 import { Type } from "@sinclair/typebox";
 import { RunStore } from "./run-store.js";
 import { RunWidget, type UICtx } from "./run-widget.js";
@@ -38,6 +39,22 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("before_agent_start", async (_event, ctx) => refreshCtx(ctx));
   pi.on("tool_execution_start", async (_event, ctx) => refreshCtx(ctx));
+
+  // ── Git auto-commit for card changes ──
+  // After each assistant turn, commit any uncommitted card changes.
+  pi.on("message_end", async (event) => {
+    if (event.message.role !== "assistant") return;
+    try {
+      const status = execSync("git status --porcelain .pipeline/cards/ 2>/dev/null", { encoding: "utf-8" }).trim();
+      if (!status) return;
+      // Parse changed files for commit message
+      const files = status.split("\n").map(l => l.trim().split(/\s+/).pop()!).filter(Boolean);
+      const slugs = files.map(f => f.replace(/.*\//, "").replace(/\.md$/, ""));
+      execSync("git add .pipeline/cards/", { encoding: "utf-8" });
+      const msg = `pipeline: update cards (${slugs.join(", ")})`;
+      execSync(`git commit -m ${JSON.stringify(msg)}`, { encoding: "utf-8" });
+    } catch { /* not a git repo, no changes, or commit failed */ }
+  });
 
   // ──────────────────────────────────────────────────
   // Tool 1: RunCreate
