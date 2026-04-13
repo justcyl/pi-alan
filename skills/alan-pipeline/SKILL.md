@@ -193,5 +193,15 @@ decision card ←── "基于发现做出选择"
 - **不重复**：card/run 之间用 links/blocked_by/result_of 引用，不复制内容。
 - **不删除**：不要的 card 移到 archived/，不要的 run 标 cancelled/superseded。
 - **Log 不沉淀知识**：任务级 observation/decision 留在 log；项目级发现和决策升级为 card。
-- **Card 自动提交**：每次 card 修改后由扩展自动 git commit，保持工作区干净。
 - **Active 不过时**：每次新建/修改 card 时，检查关联的 active cards 是否因此过时，过时就归档。
+
+## Git 维护
+
+每次修改 card（创建、编辑、归档）后，立即提交：
+
+```bash
+git add .pipeline/cards/
+git commit -m "pipeline: update cards (<列出变更的 slug>)"
+```
+
+保持 `.pipeline/cards/` 下没有未提交的变更。
